@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Public Tools – Liquid Glass</title>
 
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <style>
     :root {
       --bg: radial-gradient(circle at top right, #0b1428 0%, #060b14 100%);
@@ -27,15 +29,17 @@
       width: 100%;
       max-width: 100vw;
       overflow-x: hidden;
-      overflow-y: auto;
+      overflow-y: hidden;
       height: 100%;
     }
+
+    body.popup-open { overflow-y: auto; }
 
     body {
       min-height: 100vh;
       display: flex;
-      align-items: center;     /* ✅ vertical centering */
-      justify-content: center; /* ✅ horizontal centering */
+      align-items: center;
+      justify-content: center;
       background: var(--bg);
       font-family: "SF Pro Display", "Inter", system-ui, -apple-system, "Segoe UI", Roboto;
       color: var(--text);
@@ -43,7 +47,6 @@
       padding: 24px;
     }
 
-    /* Ambient glow */
     body::before, body::after {
       content: "";
       position: absolute;
@@ -54,23 +57,9 @@
       pointer-events: none;
     }
 
-    body::before {
-      width: 300px;
-      height: 300px;
-      background: #3fd68a;
-      top: -80px;
-      left: -80px;
-    }
+    body::before { width: 300px; height: 300px; background: #3fd68a; top: 0; left: -80px; }
+    body::after { width: 340px; height: 340px; background: #4ecbff; bottom: 0; right: -100px; }
 
-    body::after {
-      width: 340px;
-      height: 340px;
-      background: #4ecbff;
-      bottom: -100px;
-      right: -100px;
-    }
-
-    /* Card */
     .card {
       position: relative;
       width: 90%;
@@ -81,7 +70,6 @@
       background: var(--glass);
       border: 1px solid var(--border);
       backdrop-filter: blur(var(--blur)) saturate(180%);
-      -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
       box-shadow: var(--shadow);
       z-index: 1;
       animation: floatUp 0.8s cubic-bezier(0.23, 1, 0.32, 1);
@@ -91,6 +79,49 @@
       from { opacity: 0; transform: translateY(30px) scale(0.96); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
+
+    .top-icons {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 3;
+    }
+
+    .icon-btn {
+      position: relative;
+      width: 46px;
+      height: 40px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      transition: all 0.35s ease;
+    }
+
+    .icon-btn::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -75%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+      transform: skewX(-25deg);
+      opacity: 0;
+      transition: all 0.8s ease;
+    }
+
+    .icon-btn:hover::after { left: 125%; opacity: 1; }
+    .icon-btn:hover { transform: scale(1.05); border-color: var(--accent); box-shadow: 0 0 16px rgba(63,214,138,0.4); }
+
+    .icon-btn i { stroke: var(--accent); width: 22px; height: 22px; }
 
     h1 {
       text-align: center;
@@ -109,40 +140,24 @@
       color: var(--subtext);
     }
 
-    .search-wrapper {
-      position: relative;
-      width: 100%;
-      margin-bottom: 28px;
-    }
-
-    .search-wrapper svg {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
-      fill: var(--subtext);
-      opacity: 0.8;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px 14px 12px 40px;
+    .search-wrapper { width: 100%; margin-bottom: 28px; }
+    .search-box {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
       border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.07);
       backdrop-filter: blur(14px);
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
     }
 
-    input::placeholder { color: var(--subtext); }
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(63, 214, 138, 0.3);
+    .search-box i { stroke: var(--subtext); width: 20px; height: 20px; flex-shrink: 0; opacity: 0.8; }
+
+    .search-box input {
+      flex: 1; border: none; background: transparent;
+      color: var(--text); font-size: 1rem; outline: none; padding: 6px 0;
     }
+
+    .search-box input::placeholder { color: var(--subtext); }
 
     .tools {
       display: flex;
@@ -180,21 +195,17 @@
       height: 100%;
       background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
       transform: skewX(-25deg);
-      transition: all 0.6s ease;
       opacity: 0;
+      transition: all 0.8s ease;
     }
 
     .tool-btn:hover {
       transform: scale(1.04);
       border-color: var(--accent);
-      box-shadow: 0 0 20px rgba(63, 214, 138, 0.4);
+      box-shadow: 0 0 20px rgba(63,214,138,0.4);
     }
 
-    .tool-btn:hover::after {
-      left: 125%;
-      opacity: 1;
-      transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-    }
+    .tool-btn:hover::after { left: 125%; opacity: 1; }
 
     footer {
       text-align: center;
@@ -204,112 +215,81 @@
       position: relative;
     }
 
-    footer span {
-      cursor: pointer;
-      color: var(--accent);
-      font-weight: 600;
-      position: relative;
-      z-index: 3;
-    }
-
-    footer span:hover {
-      color: var(--accent-hover);
-      text-decoration: underline;
-    }
+    footer span { cursor: pointer; color: var(--accent); font-weight: 600; }
+    footer span:hover { color: var(--accent-hover); text-decoration: underline; }
 
     .popup {
       position: absolute;
-      top: calc(100% + 8px);
+      bottom: calc(100% + 10px);
       left: 50%;
-      transform: translateX(-50%) translateY(-10px);
+      transform: translateX(-50%) scale(0.97);
       opacity: 0;
       visibility: hidden;
-      background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
-      backdrop-filter: blur(28px) saturate(200%) brightness(1.1);
-      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: linear-gradient(145deg, rgba(20,28,45,0.68), rgba(12,18,32,0.62));
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: 22px;
-      padding: 38px 34px;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+      padding: 28px 24px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
       text-align: center;
       z-index: 10;
-      transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
-      pointer-events: none;
       width: 90%;
-      max-width: 380px;
+      max-width: 320px;
+      pointer-events: none;
+      transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+      backdrop-filter: blur(18px);
     }
 
     .popup.active {
-      transform: translateX(-50%) translateY(0);
+      transform: translateX(-50%) scale(1);
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
     }
 
     .popup img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      border: 3px solid var(--accent);
-      box-shadow: 0 0 20px rgba(63, 214, 138, 0.6);
-      margin-bottom: 16px;
+      width: 80px; height: 80px;
+      border-radius: 50%; border: 2px solid var(--accent);
+      margin-bottom: 10px; object-fit: cover;
     }
 
-    .popup h3 {
-      margin: 5px 0 18px;
-      color: var(--text);
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
+    .popup h3 { margin: 5px 0 12px; font-size: 1.1rem; color: var(--text); }
     .popup a {
-      display: inline-block;
-      margin: 8px 10px;
-      padding: 10px 20px;
-      border-radius: 12px;
-      font-weight: 600;
-      text-decoration: none;
-      color: #0b1220;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin: 6px 0; padding: 10px 14px;
+      border-radius: 12px; font-weight: 600;
+      text-decoration: none; color: #0b1220;
       background: linear-gradient(135deg, var(--accent), #4ecbff);
       transition: all 0.3s ease;
     }
 
-    .popup a:hover {
-      background: linear-gradient(135deg, var(--accent-hover), #3fd68a);
-      transform: scale(1.06);
-    }
+    .popup a:hover { background: linear-gradient(135deg, var(--accent-hover), #3fd68a); transform: scale(1.06); }
+    .popup a i { width: 18px; height: 18px; stroke: #0b1220; }
 
-    /* Responsive */
     @media (max-width: 844px) {
-      body {
-        padding: 20px;
-        align-items: center;  /* ✅ keep vertical centering */
-        justify-content: center;
-      }
-
-      .card {
-        width: 100%;
-        margin: 0;
-        padding: 28px 20px;
-        border-radius: 18px;
-      }
-
-      h1 { font-size: 1.4rem; }
+      .card { padding: 28px 20px; border-radius: 18px; }
+      .icon-btn { width: 42px; height: 36px; }
+      .top-icons { position: relative; justify-content: center; margin-bottom: 12px; top: 0; right: 0; }
+      h1 { margin-top: 10px; }
       p { font-size: 0.95rem; }
-      .tool-btn { width: 100%; font-size: 0.95rem; }
     }
   </style>
 </head>
 
 <body>
   <div class="card">
+    <div class="top-icons">
+      <div class="icon-btn" id="homeBtn" title="Home"><i data-lucide="home"></i></div>
+      <div class="icon-btn" id="shareBtn" title="Share"><i data-lucide="share-2"></i></div>
+    </div>
+
     <h1>Public Tools</h1>
     <p>Explore lightweight developer utilities — private, fast, and client-side</p>
 
     <div class="search-wrapper">
-      <svg viewBox="0 0 24 24">
-        <path d="M21 20l-4.35-4.35m2.1-5.4a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z" />
-      </svg>
-      <input type="text" id="search" placeholder="Search tools (e.g., bcrypt, hash...)" />
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <input type="text" id="search" placeholder="Search tools (e.g., bcrypt, hash...)" />
+      </div>
     </div>
 
     <div class="tools" id="toolsList">
@@ -321,13 +301,15 @@
       <div class="popup" id="popup">
         <img id="profileImg" src="" alt="Profile" />
         <h3 id="profileName"></h3>
-        <a id="profileGit" href="#" target="_blank">GitHub</a>
-        <a id="profileLinked" href="#" target="_blank">LinkedIn</a>
+        <a id="profileGit" href="#" target="_blank"><i data-lucide="github"></i> GitHub</a>
+        <a id="profileLinked" href="#" target="_blank"><i data-lucide="linkedin"></i> LinkedIn</a>
       </div>
     </footer>
   </div>
 
   <script>
+    lucide.createIcons();
+
     async function loadProfile() {
       try {
         const res = await fetch("./assets/files/profile.json");
@@ -337,6 +319,7 @@
         document.getElementById("profileName").textContent = data.name || "Your Name";
         document.getElementById("profileGit").href = data.github || "#";
         document.getElementById("profileLinked").href = data.linkedin || "#";
+        lucide.createIcons();
       } catch (err) {
         console.error("Profile load failed", err);
       }
@@ -374,6 +357,7 @@
     window.addEventListener("DOMContentLoaded", async () => {
       await loadProfile();
       await loadTools();
+      lucide.createIcons();
 
       const author = document.getElementById("author");
       const popup = document.getElementById("popup");
@@ -381,11 +365,39 @@
       author.addEventListener("click", (e) => {
         e.stopPropagation();
         popup.classList.toggle("active");
+        document.body.classList.toggle("popup-open", popup.classList.contains("active"));
       });
 
       document.addEventListener("click", (e) => {
-        if (!popup.contains(e.target) && e.target !== author)
+        if (!popup.contains(e.target) && e.target !== author) {
           popup.classList.remove("active");
+          document.body.classList.remove("popup-open");
+        }
+      });
+
+      // ✅ Fixed Search Filter
+      const searchInput = document.getElementById("search");
+      searchInput.addEventListener("input", () => {
+        const term = searchInput.value.toLowerCase();
+        document.querySelectorAll(".tool-btn").forEach(btn => {
+          const match = btn.textContent.toLowerCase().includes(term);
+          btn.style.display = match ? "inline-block" : "none";
+        });
+      });
+
+      document.getElementById("homeBtn").addEventListener("click", () => window.location.href = "./");
+
+      document.getElementById("shareBtn").addEventListener("click", async () => {
+        const url = window.location.href;
+        try {
+          if (navigator.share) await navigator.share({ title: document.title, url });
+          else {
+            await navigator.clipboard.writeText(url);
+            alert("🔗 Link copied!");
+          }
+        } catch (err) {
+          console.log("Share cancelled", err);
+        }
       });
     });
   </script>
