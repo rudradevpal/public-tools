@@ -325,31 +325,34 @@
       }
     }
 
+    const username = "rudradevpal";
+    const repo = "public-tools";
+    const branch = "main";
+    
     async function loadTools() {
       const toolsList = document.getElementById("toolsList");
+      const url = `https://api.github.com/repos/${username}/${repo}/contents/apps?ref=${branch}`;
       try {
-        const res = await fetch("./apps/");
-        const html = await res.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        const links = [...doc.querySelectorAll("a")]
-          .map(a => a.getAttribute("href"))
-          .filter(href => href && href.endsWith(".html"));
-
+        const res = await fetch(url);
+        const data = await res.json();
         toolsList.innerHTML = "";
-        for (const link of links) {
-          const title = link.replace(".html", "").replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-          const btn = document.createElement("a");
-          btn.href = "./apps/" + link;
-          btn.textContent = title;
-          btn.className = "tool-btn";
-          toolsList.appendChild(btn);
-        }
-
-        if (!links.length) {
-          toolsList.innerHTML = `<p style="text-align:center;color:var(--subtext)">No tools found</p>`;
-        }
-      } catch {
+    
+        data
+          .filter(file => file.name.endsWith(".html"))
+          .forEach(file => {
+            const title = file.name
+              .replace(".html", "")
+              .replace(/[-_]/g, " ")
+              .replace(/\b\w/g, c => c.toUpperCase());
+    
+            const btn = document.createElement("a");
+            btn.href = `./apps/${file.name}`;
+            btn.textContent = title;
+            btn.className = "tool-btn";
+            toolsList.appendChild(btn);
+          });
+      } catch (err) {
+        console.error("Failed to load tools:", err);
         toolsList.innerHTML = `<p style="text-align:center;color:var(--subtext)">Unable to load tool list</p>`;
       }
     }
