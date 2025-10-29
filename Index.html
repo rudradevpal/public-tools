@@ -3,162 +3,416 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bcrypt Password Hasher — Client-side</title>
-
-  <!-- Load bcryptjs -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+  <title>Public Tools – Liquid Glass</title>
 
   <style>
     :root {
-      --bg: #0f1724;
-      --card: #0b1220;
-      --accent: #6ee7b7;
-      --muted: #98a0b3;
+      --bg: radial-gradient(circle at top right, #0b1428 0%, #060b14 100%);
+      --glass: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.15);
+      --accent: #39f7b2;
+      --accent-hover: #29d99d;
+      --text: #f7faff;
+      --subtext: #b9c4d7;
+      --blur: 24px;
+      --radius: 22px;
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
     }
-    * { box-sizing: border-box; }
-    body {
+
+    * {
+      box-sizing: border-box;
+      transition: all 0.25s ease;
+    }
+
+    html, body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+      overscroll-behavior-x: none;
+      position: relative;
+    }
+
+    body {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(180deg, #061022, #071526);
-      color: #e6eef8;
-      font-family: "Inter", system-ui, sans-serif;
-      padding: 16px;
+      background: var(--bg);
+      font-family: "SF Pro Display", "Inter", system-ui, -apple-system, "Segoe UI", Roboto;
+      color: var(--text);
+      overflow-y: auto;
+      position: relative;
     }
+
+    /* Ambient lighting glows */
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.4;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body::before {
+      width: 280px;
+      height: 280px;
+      background: #3fd68a;
+      top: -80px;
+      left: -80px;
+    }
+
+    body::after {
+      width: 300px;
+      height: 300px;
+      background: #4ecbff;
+      bottom: -100px;
+      right: -100px;
+    }
+
+    /* ================================
+       🧊 Glass Card
+    =================================*/
     .card {
-      width: 100%;
-      max-width: 480px;
-      background: var(--card);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 6px 30px rgba(3,6,23,0.6);
-      border: 1px solid rgba(255,255,255,0.03);
+      position: relative;
+      width: 90%;
+      max-width: 640px;
+      margin: auto;
+      padding: 40px 36px;
+      border-radius: var(--radius);
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(var(--blur)) saturate(180%);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+      box-shadow: var(--shadow);
+      z-index: 1;
+      animation: floatUp 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+      overflow: hidden;
     }
+
+    @keyframes floatUp {
+      from { opacity: 0; transform: translateY(30px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
     h1 {
-      margin: 0 0 8px;
-      font-size: 1.3rem;
       text-align: center;
-    }
-    p {
-      margin: 0 0 16px;
-      color: var(--muted);
-      font-size: 0.85rem;
-      text-align: center;
-    }
-    label {
-      display: block;
-      font-size: 0.8rem;
-      margin-bottom: 6px;
-      color: var(--muted);
-    }
-    textarea, select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.05);
-      background: rgba(255,255,255,0.05);
-      color: inherit;
-      font-size: 0.9rem;
-      resize: vertical;
-    }
-    button {
-      width: 100%;
-      margin-top: 12px;
-      background: var(--accent);
-      border: none;
-      padding: 10px;
-      border-radius: 8px;
+      font-size: 1.7rem;
       font-weight: 600;
-      color: #02140f;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: 0.3s;
+      margin: 0;
+      background: linear-gradient(90deg, #39f7b2, #4ecbff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    button:disabled {
-      background: #1c2b36;
-      color: #7a8b9a;
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
-    .out {
-      margin-top: 14px;
-      word-wrap: break-word;
-      background: rgba(255,255,255,0.05);
-      border-radius: 8px;
-      padding: 10px;
-      font-family: monospace;
-      font-size: 0.8rem;
-      overflow-wrap: break-word;
-    }
-    footer {
-      margin-top: 10px;
+
+    p {
       text-align: center;
-      font-size: 0.75rem;
-      color: var(--muted);
+      margin: 14px 0 28px;
+      font-size: 1rem;
+      color: var(--subtext);
     }
-    @media (max-width: 480px) {
-      .card { padding: 16px; }
-      h1 { font-size: 1.1rem; }
+
+    /* ================================
+       🔍 Search Bar
+    =================================*/
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      margin-bottom: 28px;
+    }
+
+    .search-wrapper svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      fill: var(--subtext);
+      opacity: 0.8;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px 12px 40px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(14px);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    input::placeholder { color: var(--subtext); }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(63, 214, 138, 0.3);
+    }
+
+    /* ================================
+       🧰 Tool Buttons
+    =================================*/
+    .tools {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .tool-btn {
+      display: inline-block;
+      text-align: center;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(18px) saturate(180%);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+                  box-shadow 0.35s ease, border 0.35s ease;
+    }
+
+    .tool-btn::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -75%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+      transform: skewX(-25deg);
+      transition: all 0.6s ease;
+      opacity: 0;
+    }
+
+    .tool-btn:hover {
+      transform: scale(1.04);
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(63, 214, 138, 0.4);
+    }
+
+    .tool-btn:hover::after {
+      left: 125%;
+      opacity: 1;
+      transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    /* ================================
+       👣 Footer + Popup
+    =================================*/
+    footer {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--subtext);
+      margin-top: 36px;
+      position: relative;
+    }
+
+    footer span {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 600;
+      position: relative;
+      z-index: 3;
+    }
+
+    footer span:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+
+    .popup {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      opacity: 0;
+      visibility: hidden;
+      background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+      backdrop-filter: blur(28px) saturate(200%) brightness(1.1);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 22px;
+      padding: 38px 34px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+      text-align: center;
+      z-index: 10;
+      transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+      pointer-events: none;
+      width: 90%;
+      max-width: 380px;
+      overflow: hidden;
+    }
+
+    .popup.active {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .popup img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      box-shadow: 0 0 20px rgba(63, 214, 138, 0.6);
+      margin-bottom: 16px;
+    }
+
+    .popup h3 {
+      margin: 5px 0 18px;
+      color: var(--text);
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .popup a {
+      display: inline-block;
+      margin: 8px 10px;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      color: #0b1220;
+      background: linear-gradient(135deg, var(--accent), #4ecbff);
+      transition: all 0.3s ease;
+    }
+
+    .popup a:hover {
+      background: linear-gradient(135deg, var(--accent-hover), #3fd68a);
+      transform: scale(1.06);
+    }
+
+    /* ================================
+       📱 Mobile Responsive Fix
+    =================================*/
+    @media (max-width: 768px) {
+      body {
+        padding: 0;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .card {
+        width: 90%;
+        margin: auto;
+        padding: 28px 20px;
+        border-radius: 18px;
+      }
+
+      h1 { font-size: 1.4rem; }
+      p { font-size: 0.95rem; }
+
+      .tool-btn { width: 100%; font-size: 0.95rem; }
+
+      .popup {
+        width: 90%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-10px);
+        padding: 30px 24px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="card">
-    <h1>Bcrypt Password Hasher</h1>
-    <p>Generate bcrypt hashes directly in your browser — mobile-friendly & safe.</p>
+    <h1>Public Tools</h1>
+    <p>Explore lightweight developer utilities — private, fast, and client-side</p>
 
-    <label for="plain">Plain text / password</label>
-    <textarea id="plain" rows="3" placeholder="Enter text to hash"></textarea>
+    <div class="search-wrapper">
+      <svg viewBox="0 0 24 24">
+        <path d="M21 20l-4.35-4.35m2.1-5.4a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z" />
+      </svg>
+      <input type="text" id="search" placeholder="Search tools (e.g., bcrypt, hash...)" />
+    </div>
 
-    <label for="rounds">Salt rounds (cost)</label>
-    <select id="rounds">
-      <option value="8">8 (fast)</option>
-      <option value="10" selected>10 (default)</option>
-      <option value="12">12 (more secure)</option>
-    </select>
+    <div class="tools" id="toolsList">
+      <p style="text-align:center;color:var(--subtext)">Loading tools...</p>
+    </div>
 
-    <button id="generate">Generate Hash</button>
-
-    <div class="out" id="output">Hash will appear here...</div>
-
-    <footer>Uses bcryptjs — no data leaves your browser.</footer>
+    <footer>
+      Made with ❤️ by <span id="author">Loading...</span>
+      <div class="popup" id="popup">
+        <img id="profileImg" src="" alt="Profile" />
+        <h3 id="profileName"></h3>
+        <a id="profileGit" href="#" target="_blank">GitHub</a>
+        <a id="profileLinked" href="#" target="_blank">LinkedIn</a>
+      </div>
+    </footer>
   </div>
 
   <script>
-    const plainEl = document.getElementById('plain');
-    const roundsEl = document.getElementById('rounds');
-    const outputEl = document.getElementById('output');
-    const generateBtn = document.getElementById('generate');
-
-    generateBtn.addEventListener('click', async () => {
-      const text = plainEl.value.trim();
-      const rounds = parseInt(roundsEl.value, 10);
-
-      if (!text) {
-        outputEl.textContent = 'Please enter text to hash.';
-        return;
-      }
-
-      // Disable button while hashing
-      generateBtn.disabled = true;
-      generateBtn.textContent = 'Hashing... please wait';
-      outputEl.textContent = 'Generating bcrypt hash...';
-
+    async function loadProfile() {
       try {
-        // Async bcrypt (non-blocking)
-        const salt = await new Promise((res, rej) => bcrypt.genSalt(rounds, (err, salt) => err ? rej(err) : res(salt)));
-        const hash = await new Promise((res, rej) => bcrypt.hash(text, salt, (err, h) => err ? rej(err) : res(h)));
-
-        outputEl.textContent = hash;
+        const res = await fetch("./assets/files/profile.json");
+        const data = await res.json();
+        document.getElementById("author").textContent = data.name || "Your Name";
+        document.getElementById("profileImg").src = data.photo || "";
+        document.getElementById("profileName").textContent = data.name || "Your Name";
+        document.getElementById("profileGit").href = data.github || "#";
+        document.getElementById("profileLinked").href = data.linkedin || "#";
       } catch (err) {
-        outputEl.textContent = 'Error: ' + err.message;
-      } finally {
-        // Re-enable button
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Generate Hash';
+        console.error("Profile load failed", err);
       }
+    }
+
+    async function loadTools() {
+      const toolsList = document.getElementById("toolsList");
+      try {
+        const res = await fetch("./apps/");
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const links = [...doc.querySelectorAll("a")]
+          .map(a => a.getAttribute("href"))
+          .filter(href => href && href.endsWith(".html"));
+
+        toolsList.innerHTML = "";
+        for (const link of links) {
+          const title = link.replace(".html", "").replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+          const btn = document.createElement("a");
+          btn.href = "./apps/" + link;
+          btn.textContent = title;
+          btn.className = "tool-btn";
+          toolsList.appendChild(btn);
+        }
+
+        if (!links.length) {
+          toolsList.innerHTML = `<p style="text-align:center;color:var(--subtext)">No tools found</p>`;
+        }
+      } catch (e) {
+        toolsList.innerHTML = `<p style="text-align:center;color:var(--subtext)">Unable to load tool list</p>`;
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      await loadProfile();
+      await loadTools();
+
+      const author = document.getElementById("author");
+      const popup = document.getElementById("popup");
+
+      author.addEventListener("click", (e) => {
+        e.stopPropagation();
+        popup.classList.toggle("active");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!popup.contains(e.target) && e.target !== author) popup.classList.remove("active");
+      });
     });
   </script>
 </body>
