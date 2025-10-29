@@ -325,35 +325,54 @@
       }
     }
 
-    const username = "rudradevpal";
-    const repo = "public-tools";
-    const branch = "main";
-    
     async function loadTools() {
       const toolsList = document.getElementById("toolsList");
+    
+      // ✅ Update these 3 values for your repo
+      const username = "rudradevpal";
+      const repo = "public-tools";
+      const branch = "main";
+    
       const url = `https://api.github.com/repos/${username}/${repo}/contents/apps?ref=${branch}`;
+    
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          headers: {
+            "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": "2022-11-28"
+          }
+        });
+    
+        if (!res.ok) throw new Error("GitHub API error: " + res.status);
+    
         const data = await res.json();
+    
+        // Ensure it’s an array of entries (not just folder metadata)
+        const files = Array.isArray(data.entries) ? data.entries : data;
+    
         toolsList.innerHTML = "";
     
-        data
-          .filter(file => file.name.endsWith(".html"))
-          .forEach(file => {
-            const title = file.name
-              .replace(".html", "")
-              .replace(/[-_]/g, " ")
-              .replace(/\b\w/g, c => c.toUpperCase());
+        const htmlFiles = files.filter(f => f.type === "file" && f.name.endsWith(".html"));
     
-            const btn = document.createElement("a");
-            btn.href = `./apps/${file.name}`;
-            btn.textContent = title;
-            btn.className = "tool-btn";
-            toolsList.appendChild(btn);
-          });
+        htmlFiles.forEach(file => {
+          const title = file.name
+            .replace(".html", "")
+            .replace(/[-_]/g, " ")
+            .replace(/\b\w/g, c => c.toUpperCase());
+    
+          const btn = document.createElement("a");
+          btn.href = `./apps/${file.name}`;
+          btn.textContent = title;
+          btn.className = "tool-btn";
+          toolsList.appendChild(btn);
+        });
+    
+        if (!htmlFiles.length) {
+          toolsList.innerHTML = `<p style="text-align:center;color:var(--subtext)">No tools found in apps/</p>`;
+        }
       } catch (err) {
-        console.error("Failed to load tools:", err);
-        toolsList.innerHTML = `<p style="text-align:center;color:var(--subtext)">Unable to load tool list</p>`;
+        console.error("❌ Failed to load tools", err);
+        toolsList.innerHTML = `<p style="text-align:center;color:var(--subtext)">Error loading tools</p>`;
       }
     }
 
